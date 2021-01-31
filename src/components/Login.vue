@@ -6,16 +6,19 @@
                 <img src="../assets/logo.png" alt="">
             </div>
             <!-- 登录表单区 -->
-            <el-form label-width="0px" class="login_form" :model="form">    <!-- 数据绑定 -->
-                <el-form-item>  <!-- 用户名 -->
+            <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" label-width="0px" class="login_form">    <!-- 数据绑定  千万还要注意顺序-->
+            <!-- ref="loginFormRef" 可以对所有内容框进行引用 拿到el-from的实例对象 可以直接调用“resetFields”=>对整个表单进行重置，将所有字段值重置为初始值并移除校验结果
+                 :model 双向数据绑定-->
+                <el-form-item prop="username">  <!-- 用户名 -->
                     <el-input v-model="loginForm.username" prefix-icon="iconfont icon-user" ></el-input>
                 </el-form-item>
-                <el-form-item> <!-- 密码 -->
+                <el-form-item prop="password"> <!-- 密码 -->
                     <el-input v-model="loginForm.password" prefix-icon="iconfont icon-3702mima" type="password"></el-input>
                 </el-form-item>
                 <el-form-item class="btns"> <!-- 按钮 -->
                     <el-button type="primary">登录</el-button>
-                    <el-button type="info">重置</el-button>
+                    <el-button type="info" @click="resetLoginForm">重置</el-button>
+                    <!-- @click=" " 绑定单击重置事件 -->
                 </el-form-item>
             </el-form>
         </div>
@@ -30,7 +33,29 @@ export default {
       loginForm: {
         username: 'zx',
         password: '1234'
+      },
+      // 这是表单的验证规则对象
+      loginFormRules: {
+        // 验证用户名是否合法
+        username: [
+          { required: true, message: '请输入登录名称', trigger: 'blur' },
+          { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' }
+        ],
+        // 验证密码是否合法
+        password: [
+          { required: true, message: '请输入登录密码', trigger: 'blur' },
+          { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
+        ]
+
       }
+    }
+  },
+  methods: {
+    // 点击重置按钮 重置登录表单
+    resetLoginForm () {
+      // console.log(this) 可以引用访问$refs
+      this.$refs.loginFormRef.resetFields()
+      // 调用resetFields函数代码
     }
   }
 }

@@ -1,5 +1,7 @@
 # vue_shop
 
+初入vue大家庭 希望大家能给我一个好脸色 love&peace 嗯嗯 
+
 ## Project setup
 ```
 npm install
