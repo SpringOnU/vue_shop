@@ -8,14 +8,17 @@
           </div>
           <el-button type='info' @click="logout">退出</el-button>
       </el-header>
-      <!---------------------------------------------------------------------------------------->
+      <!------------------------------------------------------------------------------------------->
       <!-- 页面主体区域 -->
     <el-container>
         <!-- 侧边栏 -->
-        <el-aside width="200px">
-            <div class="toggle-button">|||</div>
+        <el-aside :width="isCollapse ? '64px' : '200px'">
+            <div class="toggle-button" @click="toggleCollapse">|||</div>
             <!-- 侧边栏菜单 -->
-            <el-menu background-color="#545c64" text-color="#fff" active-text-color="#409EFF" :unique-opened="true">
+            <el-menu background-color="#545c64" text-color="#fff" active-text-color="#409EFF" :unique-opened="true" :collapse="isCollapse" :collapse-transition="false" router>
+            <!-- collapse-transition  是否开启折叠动画  boolean true -->
+            <!-- unique-opened  是否只保持一个子菜单的展开  boolean false -->
+            <!-- collapse 是否水平折叠收起菜单（仅在 mode 为 vertical 时可用） boolean false -->
                 <el-submenu :index="item.id + ''" v-for="item in menulist" :key="item.id"> <!-- key是为Vue中的vnode标记的唯一id,通过这个key,我们的diff操作可以更准确、更快速。 -->
                 <!-- :index="item.id + ''" index接收的是字符段 item.id是数值 加一个空字符就可以转化了 -->
                     <!-- 一级菜单的模板区域 -->
@@ -25,6 +28,7 @@
                         <!-- 文本 -->
                         <span>{{item.authName}}</span>
                     </template>
+                    <!--------------------------------------->
                     <!-- 二级菜单 -->
                     <el-menu-item :index="subItem.id + ''" v-for="subItem in item.children" :key="subItem.id">
                         <!-- 图标 -->
@@ -37,7 +41,10 @@
             </el-aside>
             <!---------------------------------------------------------------------------------------->
             <!-- 右侧内容主体 -->
-            <el-main>Main</el-main>
+            <el-main>
+              <!-- 路由占位符 -->
+              <router-view></router-view>
+            </el-main>
       </el-container>
     </el-container>
     <!-- 开始的时候这些组件都没办法用 需要在element.js中导入一下才行 -->
@@ -55,7 +62,9 @@ export default {
         101: 'iconfont icon-shangpin',
         102: 'iconfont icon-danju',
         145: 'iconfont icon-baobiao'
-      }
+      },
+      // 是否折叠
+      isCollapse: false
     }
   },
   // 定义生命周期函数
@@ -72,6 +81,10 @@ export default {
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg) // 获取数据失败
       this.menulist = res.data
       console.log(res)
+    },
+    // 点击按钮 切换菜单的折叠与展开
+    toggleCollapse() {
+      this.isCollapse = !this.isCollapse
     }
   }
 }
@@ -108,5 +121,14 @@ export default {
   }
   .iconfont{
     margin-right: 10px;
+  }
+  .toggle-button {
+    background-color: #4A5064;
+    color: #fff;
+    font-size: 10px;
+    line-height: 24px;
+    text-align: center;
+    letter-spacing: 0.2em;
+    cursor: pointer;
   }
 </style>
