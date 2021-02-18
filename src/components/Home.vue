@@ -15,11 +15,12 @@
         <el-aside :width="isCollapse ? '64px' : '200px'">
             <div class="toggle-button" @click="toggleCollapse">|||</div>
             <!-- 侧边栏菜单 -->
-            <el-menu background-color="#545c64" text-color="#fff" active-text-color="#409EFF" :unique-opened="true" :collapse="isCollapse" :collapse-transition="false" router>
+            <el-menu background-color="#545c64" text-color="#fff" active-text-color="#409EFF" :unique-opened="true" :collapse="isCollapse" :collapse-transition="false" router default-active="/users">
             <!-- collapse-transition  是否开启折叠动画  boolean true -->
             <!-- unique-opened  是否只保持一个子菜单的展开  boolean false -->
             <!-- collapse 是否水平折叠收起菜单（仅在 mode 为 vertical 时可用） boolean false -->
-                <el-submenu :index="item.id + ''" v-for="item in menulist" :key="item.id"> <!-- key是为Vue中的vnode标记的唯一id,通过这个key,我们的diff操作可以更准确、更快速。 -->
+                <el-submenu :index="item.id + ''" v-for="item in menulist" :key="item.id">
+                <!-- key是为Vue中的vnode标记的唯一id,通过这个key,我们的diff操作可以更准确、更快速。 -->
                 <!-- :index="item.id + ''" index接收的是字符段 item.id是数值 加一个空字符就可以转化了 -->
                     <!-- 一级菜单的模板区域 -->
                     <template slot="title">
@@ -30,7 +31,7 @@
                     </template>
                     <!--------------------------------------->
                     <!-- 二级菜单 -->
-                    <el-menu-item :index="subItem.id + ''" v-for="subItem in item.children" :key="subItem.id">
+                    <el-menu-item :index="'/' + subItem.path" v-for="subItem in item.children" :key="subItem.id" @click="saveNavStage('/' + subItem.path)">
                         <!-- 图标 -->
                         <i class="el-icon-menu"></i>
                         <!-- 文本 -->
@@ -85,7 +86,8 @@ export default {
     // 点击按钮 切换菜单的折叠与展开
     toggleCollapse() {
       this.isCollapse = !this.isCollapse
-    }
+    },
+    saveNavStage()
   }
 }
 </script>
