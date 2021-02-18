@@ -15,7 +15,7 @@
         <el-aside :width="isCollapse ? '64px' : '200px'">
             <div class="toggle-button" @click="toggleCollapse">|||</div>
             <!-- 侧边栏菜单 -->
-            <el-menu background-color="#545c64" text-color="#fff" active-text-color="#409EFF" :unique-opened="true" :collapse="isCollapse" :collapse-transition="false" router default-active="/users">
+            <el-menu background-color="#545c64" text-color="#fff" active-text-color="#409EFF" :unique-opened="true" :collapse="isCollapse" :collapse-transition="false" router :default-active="activePath">
             <!-- collapse-transition  是否开启折叠动画  boolean true -->
             <!-- unique-opened  是否只保持一个子菜单的展开  boolean false -->
             <!-- collapse 是否水平折叠收起菜单（仅在 mode 为 vertical 时可用） boolean false -->
@@ -65,12 +65,15 @@ export default {
         145: 'iconfont icon-baobiao'
       },
       // 是否折叠
-      isCollapse: false
+      isCollapse: false,
+      // 被激活的链接地址
+      activePath: ''
     }
   },
   // 定义生命周期函数
   created() {
     this.getMenuList()// 获取所有左侧菜单
+    this.activePath = window.sessionStorage.getItem('activePath')
   },
   methods: {
     logout() {
@@ -87,7 +90,11 @@ export default {
     toggleCollapse() {
       this.isCollapse = !this.isCollapse
     },
-    saveNavStage()
+    // 保存链接激活状态
+    saveNavStage(activePath) {
+      window.sessionStorage.setItem('activePath', activePath)   // 前一个是键key名 后一个是值value
+      this.activePath = activePath  // 解决切换不高亮问题
+    }
   }
 }
 </script>
