@@ -31,15 +31,23 @@ export default {
     data() {
         return {
             // 先将get参数定义到data数据中
-            queryInfo
+            queryInfo: {
+                query: '',
+                pagenum: 1,
+                pagesize: 2
+            }
         }
     },
     created() { // 发起首批数据请求;
         this.getUserList()
     },
     methods: {
-        getUserList() {
-            this.$http.get('user', { params: {}})   // user请求地址 要携带一些get参数 get参数用params来指定 由api文档可知参数包含3个属性 query、pagenum、pagesize
+        async getUserList() {
+            const { data: res } = await this.$http.get('users', { params: this.queryInfo })
+            console.log(res);
+            // users请求地址 要携带一些get参数 get参数用params来指定 由api文档可知参数包含3个属性 query、pagenum、pagesize
+            // await 得到一个数据对象
+            // 从这个数据对象上解构得到一个data属性 命名为 res
         }
     }
 }
