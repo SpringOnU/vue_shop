@@ -13,12 +13,12 @@
             <div style="margin-top: 15px;">
                 <el-row :gutter="20">   <!-- gutter格与格之间的空隙 -->
                     <el-col :span="8">
-                        <el-input placeholder="请输入内容">
-                            <el-button slot="append" icon="el-icon-search"></el-button>
+                        <el-input placeholder="请输入内容" v-model="queryInfo.query" clearable @clear="getUserList()">
+                            <el-button slot="append" icon="el-icon-search" @click="getUserList()"></el-button>
                         </el-input>
                     </el-col>   <!-- span格子的大小 -->
                     <el-col :span="4">
-                        <el-button type="primary">添加用户</el-button>
+                        <el-button type="primary" @click="addDialogVisible = true">添加用户</el-button>
                     </el-col>
                 </el-row>
 
@@ -64,6 +64,34 @@
                 </el-pagination>
             </div>
         </el-card>
+
+        <!-- 添加用户对话框 -->
+        <el-dialog title="添加用户" :visible.sync="addDialogVisible"  width="50%">
+            <!-- title：弹出框的标题
+                 :visible.sync 用来控制对话框的打开和关闭 布尔值 -->
+
+            <!-- 内容处理区 -->
+            <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="70px">
+                <el-form-item label="用户名" prop="username">
+                    <el-input v-model="addForm.username"></el-input>
+                </el-form-item>
+                <el-form-item label="密码" prop="password">
+                    <el-input v-model="addForm.password"></el-input>
+                </el-form-item>
+                <el-form-item label="邮箱" prop="email">
+                    <el-input v-model="addForm.email"></el-input>
+                </el-form-item>
+                <el-form-item label="手机" prop="mobile">
+                    <el-input v-model="addForm.mobile"></el-input>
+                </el-form-item>
+            </el-form>
+            <!-- 底部区 -->
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="addDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+            </span>
+        </el-dialog>
+
     </div>
 </template>
 
@@ -73,12 +101,36 @@ export default {
         return {
             // 先将get参数定义到data数据中
             queryInfo: {
-                query: '',
+                query: '', /* 搜索关键字 */
                 pagenum: 1, /* 当前的页数 */
                 pagesize: 2 /* 当前每页显示几条 */
             },
             userlist: [],
-            total: 0
+            total: 0,
+            addDialogVisible: false, /* 控制添加用户对话框的显示和隐藏 */
+            // 添加用户表单数据
+            addForm: {
+                username: '',
+                password: '',
+                email: ''
+            },
+            // 添加表单的验证规则对象
+            addFormRules: {
+                username: [
+                    { required: true, message: '请输入用户名', trigger: 'blur' },
+                    { min: 3, max: 10, message: '用户名长度在 3 到 10 个字符之间', trigger: 'blur' }
+                ],
+                password: [
+                    { required: true, message: '请输入密码', trigger: 'blur' },
+                    { min: 6, max: 15, message: '密码长度在 6 到 15 个字符之间', trigger: 'blur' }
+                ],
+                email: [
+                    { required: true, message: '请输入邮箱', trigger: 'blur' }
+                ],
+                mobile: [
+                    { required: true, message: '请输入手机', trigger: 'blur' }
+                ]
+            }
         }
     },
     created() { // 发起首批数据请求;
