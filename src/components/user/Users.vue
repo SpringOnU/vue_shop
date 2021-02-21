@@ -34,7 +34,9 @@
                         <!-- 指定了作用域插槽就可以不要prop了 因为会覆盖 -->
                         <template slot-scope="scope">
                             <!-- {{scope.row.mg_state}} scope.row拿到这一行数据 -->
-                            <el-switch v-model="scope.row.mg_state"></el-switch>
+                            <el-switch v-model="scope.row.mg_state" @change="userStateChange(scope.row)">
+                                <!-- change监听switch开关的改变 -->
+                            </el-switch>
                         </template>
                     </el-table-column>
                     <el-table-column label="操作" width="180px">
@@ -50,8 +52,15 @@
                 </el-table>
 
                 <!-- 用户分页 -->
-                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage4" :page-sizes="[100, 200, 300, 400]" :page-size="100" layout="total, sizes, prev, pager, next, jumper" :total="400">
-                     @size-change="handleSizeChange"事件绑定
+                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="queryInfo.pagenum" :page-sizes="[1, 2, 5, 10]" :page-size="queryInfo.pagesize" layout="total, sizes, prev, pager, next, jumper" :total="total">
+                     <!-- size-change和current-change事件来处理页码大小和当前页变动时候触发的事件。
+                          current-change 页码值切换
+                          page-sizes接受一个整型数组，数组元素为展示的选择每页显示个数的选项，
+                          :current-page 当前是第几页=>可以通过queryInfo里面的pagenum拿到
+                          :page-sizes 写了几 这页里面就会显示几条
+                          :page-size 当前这一页显示了几条 => 可以通过queryIfo里面的pagesize拿到
+                          layout 指定页面上展示什么布局结构
+                          :total 一共有多少数据 绑定即可-->
                 </el-pagination>
             </div>
         </el-card>
@@ -65,8 +74,8 @@ export default {
             // 先将get参数定义到data数据中
             queryInfo: {
                 query: '',
-                pagenum: 1,
-                pagesize: 2
+                pagenum: 1, /* 当前的页数 */
+                pagesize: 2 /* 当前每页显示几条 */
             },
             userlist: [],
             total: 0
@@ -89,7 +98,26 @@ export default {
             console.log(res);
         },
         // 监听pageSize改变的事件
-        handleSizeChange() {}
+        handleSizeChange(newSize) {
+            // console.log(newSize);
+            this.queryInfo.pagesize = newSize;
+            this.getUserList(); /* 重新发起请求 获取数据 */
+        },
+        // 监听叶马志改变
+        handleCurrentChange(newPage) {
+            console.log(newPage);
+            this.queryInfo.pagenum = newPage;
+            this.getUserList();
+        },
+        async userStateChange(userInfo) {
+            console.log(userInfo);
+            const { data: res } = await this.$http.put(`users/${userInfo.id}/state/${userInfo.mg_state}`)
+            if (res.meta.status !== 200) {
+                userInfo.mg_state = !userInfo.mg_state  // 失败了就把原来状态返回去
+                return this.$message.error('更新用户状态失败')
+            }
+            this.$message.success('更新用户状态成功')
+        }
     }
 }
 </script>
