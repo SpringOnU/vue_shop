@@ -40,8 +40,8 @@
                         </template>
                     </el-table-column>
                     <el-table-column label="操作" width="180px">
-                        <template >
-                            <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
+                        <template>
+                            <el-button type="primary" icon="el-icon-edit" size="mini" @click="editDialogVisible = true "></el-button>
                             <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
                             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
                                 <!-- enterable	鼠标是否可进入到 tooltip 中	Boolean	—	true -->
@@ -69,6 +69,15 @@
         <el-dialog title="添加用户" :visible.sync="addDialogVisible" @close="addDialogClosed" width="50%">
             <!-- title：弹出框的标题
                  :visible.sync 用来控制对话框的打开和关闭 布尔值 -->
+
+        <!-- 修改用户对话框 -->
+        <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="50%">
+            <span>这是一段信息</span>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="editDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="editDialogVisible = false">确 定</el-button>
+            </span>
+        </el-dialog>
 
             <!-- 内容处理区 -->
             <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="70px">
@@ -129,12 +138,14 @@ export default {
             userlist: [],
             total: 0,
             addDialogVisible: false, /* 控制添加用户对话框的显示和隐藏 */
+
             // 添加用户表单数据
             addForm: {
                 username: '',
                 password: '',
                 email: ''
             },
+
             // 添加表单的验证规则对象
             addFormRules: {
                 username: [
@@ -153,7 +164,8 @@ export default {
                     { required: true, message: '请输入手机', trigger: 'blur' },
                     { validator: checkMobile, trigger: 'blur' }
                 ]
-            }
+            },
+            editDialogVisible: false /* 控制修改用户对话框的显示和隐藏 */
         }
     },
     created() { // 发起首批数据请求;
@@ -170,7 +182,7 @@ export default {
             }
             this.userlist = res.data.users
             this.total = res.data.total
-            console.log(res);
+            // console.log(res);
         },
         // 监听pageSize改变的事件
         handleSizeChange(newSize) {
@@ -180,12 +192,12 @@ export default {
         },
         // 监听叶马志改变
         handleCurrentChange(newPage) {
-            console.log(newPage);
+            // console.log(newPage);
             this.queryInfo.pagenum = newPage;
             this.getUserList();
         },
         async userStateChange(userInfo) {
-            console.log(userInfo);
+            // console.log(userInfo);
             const { data: res } = await this.$http.put(`users/${userInfo.id}/state/${userInfo.mg_state}`)
             if (res.meta.status !== 200) {
                 userInfo.mg_state = !userInfo.mg_state  // 失败了就把原来状态返回去
@@ -223,6 +235,11 @@ export default {
                 this.getUserList();
             })
         }
+
+        // 修改用户信息
+        /* showEditDialog() {
+            this.editDialogVisible = true
+        } */
     }
 }
 </script>
