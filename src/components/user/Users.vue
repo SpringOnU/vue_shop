@@ -41,7 +41,7 @@
                     </el-table-column>
                     <el-table-column label="操作" width="180px">
                         <template>
-                            <el-button type="primary" icon="el-icon-edit" size="mini" @click="editDialogVisible = true "></el-button>
+                            <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog()"></el-button>
                             <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
                             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
                                 <!-- enterable	鼠标是否可进入到 tooltip 中	Boolean	—	true -->
@@ -69,16 +69,6 @@
         <el-dialog title="添加用户" :visible.sync="addDialogVisible" @close="addDialogClosed" width="50%">
             <!-- title：弹出框的标题
                  :visible.sync 用来控制对话框的打开和关闭 布尔值 -->
-
-        <!-- 修改用户对话框 -->
-        <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="50%">
-            <span>这是一段信息</span>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="editDialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="editDialogVisible = false">确 定</el-button>
-            </span>
-        </el-dialog>
-
             <!-- 内容处理区 -->
             <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="70px">
                 <el-form-item label="用户名" prop="username">
@@ -101,6 +91,14 @@
             </span>
         </el-dialog>
 
+            <!-- 修改用户对话框 -->
+            <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="50%">
+                <span>这是一段信息</span>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="editDialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="editDialogVisible = false">确 定</el-button>
+                </span>
+            </el-dialog>
     </div>
 </template>
 
@@ -164,8 +162,8 @@ export default {
                     { required: true, message: '请输入手机', trigger: 'blur' },
                     { validator: checkMobile, trigger: 'blur' }
                 ]
-            },
-            editDialogVisible: false /* 控制修改用户对话框的显示和隐藏 */
+            }
+             /* 控制修改用户对话框的显示和隐藏 */
         }
     },
     created() { // 发起首批数据请求;
@@ -190,7 +188,7 @@ export default {
             this.queryInfo.pagesize = newSize;
             this.getUserList(); /* 重新发起请求 获取数据 */
         },
-        // 监听叶马志改变
+        // 监听页码的改变
         handleCurrentChange(newPage) {
             // console.log(newPage);
             this.queryInfo.pagenum = newPage;
@@ -234,12 +232,13 @@ export default {
                 // 刷新用户列表
                 this.getUserList();
             })
-        }
+        },
 
         // 修改用户信息
-        /* showEditDialog() {
-            this.editDialogVisible = true
-        } */
+        showEditDialog() {
+            this.editDialogVisible = true;
+            console.log(123);
+        }
     }
 }
 </script>
