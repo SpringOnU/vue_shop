@@ -40,8 +40,8 @@
                         </template>
                     </el-table-column>
                     <el-table-column label="操作" width="180px">
-                        <template>
-                            <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog()"></el-button>
+                        <template slot-scope="scope">
+                            <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
                             <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
                             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
                                 <!-- enterable	鼠标是否可进入到 tooltip 中	Boolean	—	true -->
@@ -92,11 +92,21 @@
         </el-dialog>
 
             <!-- 修改用户对话框 -->
-            <el-dialog title="修改用户" :visible.sync="editDialogVisible" width="50%">
-                <span>这是一段信息</span>
+            <el-dialog title="修改用户" width="50%" :visible.sync="editDialogVisible" @close="editDialogClosed">
+                <el-form ref="editFormRef" :model="editForm" :rules="editFormRules" label-width="70px">
+                    <el-form-item label="用户名">
+                        <el-input v-model="editForm.username" disabled><!-- 为什么是username呢 要看响应数据而不是参数 --></el-input>
+                    </el-form-item>
+                    <el-form-item label="邮箱" prop="email">
+                        <el-input v-model="editForm.email"><!-- 为什么是username呢 要看响应数据而不是参数 --></el-input>
+                    </el-form-item>
+                    <el-form-item label="手机" prop="mobile">
+                        <el-input v-model="editForm.mobile"><!-- 为什么是username呢 要看响应数据而不是参数 --></el-input>
+                    </el-form-item>
+                </el-form>
                 <span slot="footer" class="dialog-footer">
                     <el-button @click="editDialogVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="editDialogVisible = false">确 定</el-button>
+                    <el-button type="primary" @click="editUserInfo">确 定</el-button>
                 </span>
             </el-dialog>
     </div>
@@ -162,8 +172,21 @@ export default {
                     { required: true, message: '请输入手机', trigger: 'blur' },
                     { validator: checkMobile, trigger: 'blur' }
                 ]
+            },
+
+            editDialogVisible: false, /* 控制修改用户对话框的显示和隐藏 */
+            editForm: {}, /* 查询到的用户信息对象 */
+            editFormRules: { /* 验证规则 */
+                email: [
+                    { required: true, message: '请输入邮箱', trigger: 'blur' },
+                    { validator: checkEmail, trigger: 'blur' }
+                ],
+                mobile: [
+                    { required: true, message: '请输入手机', trigger: 'blur' },
+                    { validator: checkMobile, trigger: 'blur' }
+                ]
+
             }
-             /* 控制修改用户对话框的显示和隐藏 */
         }
     },
     created() { // 发起首批数据请求;
@@ -235,9 +258,43 @@ export default {
         },
 
         // 修改用户信息
-        showEditDialog() {
+        async showEditDialog(id) {
+            const { data: res } = await this.$http.get('users/' + id); /* 发起get请求 */
+            if (res.meta.status !== 200) {
+                return this.$message.error('查询用户失败');
+            }
+            this.editForm = res.data; /* 把查询到的用户信息保存到editForm身上 */
             this.editDialogVisible = true;
-            console.log(123);
+        },
+
+        // 监听修改用户对话框的关闭事件
+        editDialogClosed() {
+            this.$refs.editFormRef.resetFields();
+        },
+
+        // 修改用户信息并提交
+        editUserInfo() {
+            // 预验证
+            this.$refs.editFormRef.validate(async valid => {
+                // console.log(valid);
+                if (!valid) return // 返回结束
+                // 发起请求
+                const { data: res } = await this.$http.put('users/' + this.editForm.id, {
+                     email: this.editForm.email,
+                     mobile: this.editForm.mobile
+                })
+
+                if (res.meta.status !== 200) {
+                    return this.$message.error('更新用户信息失败');
+                }
+
+                // 关闭对话框
+                this.editDialogVisible = false;
+                // 刷新数据列表
+                this.getUserList();
+                // 提示修改成功
+                this.$message.success('更新用户信息成功');
+            });
         }
     }
 }
