@@ -316,7 +316,14 @@ export default {
                     if (conFirmResult !== 'confirm') {
                         return this.$message.info('已取消删除')
                     }
-                    console.log('确认了删除');
+                    // 确认删除用户信息
+                    // console.log('确认了删除');
+                    const { data: res } = await this.$http.delete('users/' + id)/* 这就是上面接收的形参 */
+                    if (res.meta.status !== 200) {
+                        return this.$message.error('删除用户失败');
+                    }
+                    this.$message.success('删除用户成功');
+                    this.getUserList();
         }
     }
 }
