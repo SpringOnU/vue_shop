@@ -5,6 +5,7 @@ import Home from '../components/Home.vue' // 添加路由规则
 import Welcome from '../components/Welcome.vue' // 添加路由规则
 import Users from '../components/user/Users.vue'
 import Rights from '../components/power/Rights.vue'
+import Roles from '../components/power/Roles.vue'
 
 Vue.use(Router)
 const router = new Router({
@@ -18,7 +19,8 @@ const router = new Router({
       children: [   // 子路由
         { path: '/welcome', component: Welcome },
         { path: '/users', component: Users },
-        { path: '/rights', component: Rights }
+        { path: '/rights', component: Rights },
+        { path: '/roles', component: Roles }
       ]
     }
   ]
