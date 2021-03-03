@@ -73,7 +73,7 @@
 
             <!-- 分配权限的对话框 -->
             <el-dialog title="分配权限" :visible.sync="setRightDialogVisible" width="50%">
-                <el-tree :data="rightslist" :props="treeProps">
+                <el-tree :data="rightslist" :props="treeProps" show-checkbox node-key="id" default-expand-all><!-- 每个树节点用来作为唯一标识的属性，整棵树应该是唯一的 只要你选中了这个节点 你就选中了我的id值 -->
                     </el-tree>
                 <span slot="footer" class="dialog-footer">
                     <el-button @click="setRightDialogVisible = false">取 消</el-button>
