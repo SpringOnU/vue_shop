@@ -50,7 +50,7 @@
                         <!-- 删除按钮 -->
                         <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
                         <!-- 分配角色 -->
-                        <el-button type="warning" icon="el-icon-setting" size="mini" @click="showSetRightDialog">分配权限</el-button>
+                        <el-button type="warning" icon="el-icon-setting" size="mini" @click="showSetRightDialog(scope.row)">分配权限</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -72,14 +72,14 @@
             </el-dialog>
 
             <!-- 分配权限的对话框 -->
-            <el-dialog title="分配权限" :visible.sync="setRightDialogVisible" width="50%">
-                <el-tree :data="rightslist" :props="treeProps" show-checkbox node-key="id" default-expand-all><!-- 每个树节点用来作为唯一标识的属性，整棵树应该是唯一的 只要你选中了这个节点 你就选中了我的id值 -->
-                    </el-tree>
+            <el-dialog title="分配权限" :visible.sync="setRightDialogVisible" width="50%" @close="setRightDialogClosed">
+                <el-tree :data="rightslist" :props="treeProps" show-checkbox node-key="id" default-expand-all :default-checked-keys="defKeys" ref="treeRef"><!-- 每个树节点用来作为唯一标识的属性，整棵树应该是唯一的 只要你选中了这个节点 你就选中了我的id值  :default-checked-keys="defKeys"默认选择权限 在"defKeys"中定义选中的id -->
+                </el-tree>
                 <span slot="footer" class="dialog-footer">
                     <el-button @click="setRightDialogVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="setRightDialogVisible = false">确 定</el-button>
+                    <el-button type="primary" @click="allotRights">确 定</el-button>
                 </span>
-                </el-dialog>
+            </el-dialog>
     </div>
 </template>
 
@@ -98,7 +98,10 @@ export default {
             treeProps: {
                 label: 'authName',
                 children: 'children'
-            }
+            },
+            defKeys: [],
+            // 当前即将分配角色的角色id
+            roleId: []
         }
     },
     created() {
@@ -172,16 +175,58 @@ export default {
         },
 
         // 展示分配权限的对话框
-        async showSetRightDialog() {
+        async showSetRightDialog(role) {
+            this.roleId = role.id
             // 获取所有权限的数据
             const { data: res } = await this.$http.get('rights/tree')
             if (res.meta.status !== 200) {
                     return this.$message.error('获取权限数据失败');
             }
+
             // 把获取到的权限数据保存到data中
             this.rightslist = res.data;
+            // 递归获取三级权限的id
+            this.getLeafKeys(role, this.defKeys);
             this.setRightDialogVisible = true;
+            console.log(this.rightslist);
+        },
+        // 通过递归的形式 获取所有角色下的三级权限的id并保存到数组中
+        getLeafKeys(node, arr) {
+            // node 节点判断是否是三级节点 arr 数组进行保存
+            if (!node.children) { // 不包含children属性
+                return arr.push(node.id)
+            }
+            node.children.forEach(item => this.getLeafKeys(item, arr))
+            // 把 item当做节点传进去   this.getLeafKeys(item, arr)再次调用递归函数
+        },
+
+        // 监听分配角色权限的关闭事件
+        setRightDialogClosed() {
+            // 每次对话框关闭后都清空一下数组 不然会越来越多
+            this.defKeys = [] // 重新赋值
+        },
+
+        // 点击为角色分配权限
+        // 勾选了状态 应该向服务器发起请求 将这个状态保存到服务器当中
+        // 通过拿到id来实现
+        async allotRights() {
+            const keys = [
+                ...this.$refs.treeRef.getCheckedKeys(), // getCheckedKeys() 拿到所有已选中的id数组 ...是展开运算符 放到数组中
+                this.$refs.treeRef.getHalfCheckedKeys() // getHalfCheckedKeys() 拿到所有半选中的id数组
+            ];
+            const idStr = keys.join(','); // 以 `,` 分割的权限 ID 列表
+
+            const { data: res } = await this.$http.post(`roles/${this.roleId}/rights`, { rids: idStr });
+            // rids权限 ID 列表（字符串）以 `,` 分割的权限 ID 列表（获取所有被选中、叶子节点的key和半选中节点的key, 包括 1，2，3级节点）
+
+            if (res.meta.status !== 200) {
+                    return this.$message.error('分配权限失败');
+            }
+            this.$message.success('分配权限成功');
+            this.getRolesList();
+            this.setRightDialogVisible = false;
         }
+
     }
 }
 </script>
