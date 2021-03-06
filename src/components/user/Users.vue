@@ -388,6 +388,7 @@ export default {
             this.$message.success('更新角色成功');
             this.getUserList();
             this.setRoleDialogVisible = false;
+            /* 不要尝试修改admin角色 会气死的 因为提示了 data: null meta: msg: "不允许修改admin账户" status: 400 吃一堑长一智 记得多思考多尝试嗯嗯 */
         },
 
         // 监听分配角色对话框的关闭事件
