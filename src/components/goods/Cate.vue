@@ -40,7 +40,7 @@
             </tree-table>
 
             <!-- 分页 -->
-            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="queryInfo.pagenum" :page-sizes="[3, 5, 10, 15]" :page-size="queryInfo.pagenum" layout="total, sizes, prev, pager, next, jumper" :total="total">
+            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="queryInfo.pagenum" :page-sizes="[3, 5, 10, 15]" :page-size="queryInfo.pagesize" layout="total, sizes, prev, pager, next, jumper" :total="total">
                 <!-- handleSizeChange监听pagesize handleCurrentChange改变监听pagenum的改变 :current-page数据绑定 :page-sizes显示的页数 :page-size现在处于的页码 -->
             </el-pagination>
         </el-card>
@@ -55,7 +55,7 @@
             </el-form>
             <el-form :model="addCateForm" :rules="addCateFormRules" ref="addCateFormRef" label-width="100px">
                 <el-form-item label="父级分类：">
-                    <el-cascader expand-trigger="hover" v-model="selectedKeys" :options="parentCateList" :props="cascaderProps" @change="parentCateChanged">
+                    <el-cascader expand-trigger="hover" v-model="selectedKeys" :options="parentCateList" :props="cascaderProps" @change="parentCateChanged" clearable change-on-select multiple="false">
                         <!-- v-model必须指定数组 :options指定数据源 :props指定配置对象 parentCateChange @change选择项变化触发 clearable	是否支持清空选项-->
                     </el-cascader>
                 </el-form-item>
@@ -76,7 +76,7 @@ export default {
             queryInfo: {
                 type: 3,
                 pagenum: 1,
-                pagesize: 3
+                pagesize: 5
             },
             // 商品分类的数据列表，默认为空
             catelist: [],
@@ -181,6 +181,9 @@ export default {
         // 选择项变化触发
         parentCateChanged() {
             console.log(this.selectedKeys);
+            // 如果selected中的数组length大于0 证明选中了父级分类
+            // 反之 没有选中父级分类
+            // if (this.selectedKeys.length > 0) {}
         }
     }
 }
