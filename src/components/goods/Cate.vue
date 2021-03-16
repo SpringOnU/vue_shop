@@ -46,14 +46,14 @@
         </el-card>
 
         <!-- 添加分类的对话框 -->
-        <el-dialog title="添加分类" :visible.sync="addCateDialogVisible" width="50%">
+        <el-dialog title="添加分类" :visible.sync="addCateDialogVisible" width="50%" @close="addCateDialogClosed">
             <!-- 添加分类的表单 -->
             <el-form :model="addCateForm" :rules="addCateFormRules" ref="addCateFormRef" label-width="100px">
+
                 <el-form-item label="分类名称：" prop="cat_name">
                     <el-input v-model="addCateForm.cat_name"></el-input>
                 </el-form-item>
-            </el-form>
-            <el-form :model="addCateForm" :rules="addCateFormRules" ref="addCateFormRef" label-width="100px">
+
                 <el-form-item label="父级分类：">
                     <el-cascader expand-trigger="hover" v-model="selectedKeys" :options="parentCateList" :props="cascaderProps" @change="parentCateChanged" clearable change-on-select multiple="false">
                         <!-- v-model必须指定数组 :options指定数据源 :props指定配置对象 parentCateChange @change选择项变化触发 clearable	是否支持清空选项-->
@@ -63,7 +63,7 @@
 
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addCateDialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="addCateDialogVisible = false">确 定</el-button>
+                <el-button type="primary" @click="addCate">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -183,7 +183,33 @@ export default {
             console.log(this.selectedKeys);
             // 如果selected中的数组length大于0 证明选中了父级分类
             // 反之 没有选中父级分类
-            // if (this.selectedKeys.length > 0) {}
+            if (this.selectedKeys.length > 0) {
+                // 父级分类的id
+                this.addCateForm.cat_pid = this.selectedKeys[
+                    this.selectedKeys.length - 1
+                ]
+                // 为当前分类的等级赋值
+                this.addCateForm.cat_level = this.selectedKeys.length;
+            } else {
+                this.addCateForm.cat_pid = 0;
+                // 为当前分类的等级赋值
+                this.addCateForm.cat_level = 0;
+            }
+        },
+
+        // 点击按钮添加新的分类
+        addCate() {
+            console.log(this.addCateForm);
+        },
+
+        // 监听对话框关闭事件 重置表单数据
+        addCateDialogClosed() {
+            // 重置分类名称
+            this.$refs.addCateFormRef.resetFields();
+            // 重置父级分类
+            this.selectedKeys = [];
+            this.addCateForm.cat_pid = 0;
+            this.addCateForm.cat_level = 0;
         }
     }
 }
