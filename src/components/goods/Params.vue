@@ -37,6 +37,7 @@ export default {
         async getCateList() {
             const { data: res } = await this.$http.get('categories')
             console.log(res);
+            // 11
             if (res.meta.status !== 200) {
                 return this.$message.error('获取列表数据失败');
             }
