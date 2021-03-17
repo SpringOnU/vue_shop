@@ -199,7 +199,20 @@ export default {
 
         // 点击按钮添加新的分类
         addCate() {
-            console.log(this.addCateForm);
+            // console.log(this.addCateForm);
+            // 预验证
+            this.$refs.addCateFormRef.validate(async valid => {
+                if (!valid) return // 预校验失败
+                const { data: res } = await this.$http.post('categories', this.addCateForm);
+
+                if (res.meta.status !== 201) {
+                return this.$message.error('添加分类失败');
+                }
+
+                this.$message.success('添加分类成功');
+                this.getCateList();
+                this.addCateDialogVisible = false;
+            });
         },
 
         // 监听对话框关闭事件 重置表单数据
