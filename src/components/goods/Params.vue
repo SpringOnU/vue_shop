@@ -47,13 +47,48 @@
                 <el-tab-pane label="静态属性" name="only">
                     <!-- 添加静态属性 -->
                     <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加属性</el-button>
+
+                    <!-- 静态参数表格 -->
+                    <el-table :data="onlyTableData" border stripe>
+                        <!-- 展开行 -->
+                        <el-table-column type="expand"></el-table-column>
+                        <!-- 索引列 -->
+                        <el-table-column type="index"></el-table-column>
+                        <el-table-column label="属性名称" prop="attr_name"></el-table-column>
+                        <el-table-column label="操作">
+                            <template>
+                                <el-button type="primary" icon="el-icon-edit" size="mini">编辑</el-button>
+                                <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
                 </el-tab-pane>
             </el-tabs>
         </el-card>
+
+        <!-- 添加动态参数、静态属性的对话框 -->
+        <!-- 动态参数、静态属性的对话框是同一个 -->
+        <!-- title="titleText()" 这里的title不能写死了 用计算属性变成动态的 -->
+        <el-dialog :title="'添加' + titleText()" :visible.sync="addDialogVisible" width="50%">
+
+            <!-- 添加分类的表单 -->
+            <!-- <el-form :model="addCateForm" :rules="addCateFormRules" ref="addCateFormRef" label-width="100px">
+
+                <el-form-item label="分类名称：" prop="cat_name">
+                    <el-input v-model="addCateForm.cat_name"></el-input>
+                </el-form-item>
+            </el-form> -->
+
+            <span>
+                <el-button @click="addDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="addCate">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
 <script>
+// 30/4
 export default {
     data() {
         return {
@@ -72,7 +107,9 @@ export default {
             // 动态参数
             manyTableData: [],
             // 静态属性
-            onlyTableData: []
+            onlyTableData: [],
+            // 控制添加对话框的显示与隐藏
+            addDialogVisible: false
         }
     },
     created() {
@@ -130,6 +167,7 @@ export default {
         }
     },
     computed: { // 计算属性
+
         // 如果按钮需要被禁用 返回true 否则false
         isBtnDisabled() {
             if (this.selectedCateKeys.length !== 3) {
@@ -144,6 +182,14 @@ export default {
                 return this.selectedCateKeys[2]
             }
             return null // 没有这个地址
+        },
+
+        // 动态计算标题文本
+        titleText() {
+            if (this.activeName === 'many') {
+                return '动态参数'
+            }
+            return '静态属性'
         }
     }
 }
