@@ -14,10 +14,26 @@
 
             <!-- 选择商品分类区域 -->
             <el-row class="cat_opt">
+                <el-col>
                 <span>选择商品分类：</span>
-                <!-- 选择商品的级联选择框 -->
-                <el-cascader expand-trigger= "hover" :options="catelist" :props="cateProps" v-model="selectedCateKeys" @change="handleChange"></el-cascader>
+                <!-- 选择商品分类的级联选择框 -->
+                <el-cascader expand-trigger="hover" :options="catelist" :props="cateProps" v-model="selectedCateKeys" @change="handleChange">
+                </el-cascader>
+                </el-col>
             </el-row>
+
+            <el-tabs v-model="activeName" @tab-click="handleTabClick">
+                <el-tab-pane label="动态参数" name="only">
+
+                    <!-- 添加动态参数 -->
+                    <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加参数</el-button>
+                </el-tab-pane>
+
+                <el-tab-pane label="静态属性" name="many">
+                    <!-- 添加静态属性 -->
+                    <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加属性</el-button>
+                </el-tab-pane>
+            </el-tabs>
         </el-card>
     </div>
 </template>
@@ -35,7 +51,9 @@ export default {
                 children: 'children'
             },
             // 级联选择器双向绑定到的数组
-            selectedCateKeys: []
+            selectedCateKeys: [],
+            // 被激活的页签的名称 默认的
+            activeName: 'only'
         }
     },
     created() {
@@ -49,12 +67,48 @@ export default {
             if (res.meta.status !== 200) {
                 return this.$message.error('获取列表数据失败');
             }
-            this.catelist = res;
-            console.log(this.catelist);
+            this.catelist = res.data;
+            // console.log(this.catelist);
         },
+
         // 级联选择框变化会触发这个数组
-        handleChange() {
+        // 选中必须是三级分类
+        async handleChange() {
+            // 证明选中的不是三级分类
+            if (this.selectedCateKeys.length !== 3) {
+                this.selectedCateKeys = []
+                return
+            }
+
             console.log(this.selectedCateKeys);
+            // 根据所选分类的id和当前所处的面板获取获取对应的参数
+            const { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, { params: { sel: this.activeName } });
+            if (res.meta.status !== 200) {
+                return this.$message.error('获取参数列表失败');
+            }
+            console.log(res.data);
+        },
+
+        // Tab页签点击事件的处理函数
+        handleTabClick() {
+            console.log(this.activeName);
+        }
+    },
+    computed: { // 计算属性
+        // 如果按钮需要被禁用 返回true 否则false
+        isBtnDisabled() {
+            if (this.selectedCateKeys.length !== 3) {
+                return true
+            }
+            return false
+        },
+
+        // 当前选中的三级分类的id
+        cateId() {
+            if (this.selectedCateKeys.length === 3) {
+                return this.selectedCateKeys[2]
+            }
+            return null // 没有这个地址
         }
     }
 }
