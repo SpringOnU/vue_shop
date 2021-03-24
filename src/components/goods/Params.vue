@@ -23,13 +23,28 @@
             </el-row>
 
             <el-tabs v-model="activeName" @tab-click="handleTabClick">
-                <el-tab-pane label="动态参数" name="only">
+                <el-tab-pane label="动态参数" name="many">
 
                     <!-- 添加动态参数 -->
                     <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加参数</el-button>
+
+                    <!-- 动态参数表格 -->
+                    <el-table :data="manyTableData" border stripe>
+                        <!-- 展开行 -->
+                        <el-table-column type="expand"></el-table-column>
+                        <!-- 索引列 -->
+                        <el-table-column type="index"></el-table-column>
+                        <el-table-column label="参数名称" prop="attr_name"></el-table-column>
+                        <el-table-column label="操作">
+                            <template>
+                                <el-button type="primary" icon="el-icon-edit" size="mini">编辑</el-button>
+                                <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
                 </el-tab-pane>
 
-                <el-tab-pane label="静态属性" name="many">
+                <el-tab-pane label="静态属性" name="only">
                     <!-- 添加静态属性 -->
                     <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加属性</el-button>
                 </el-tab-pane>
@@ -53,7 +68,11 @@ export default {
             // 级联选择器双向绑定到的数组
             selectedCateKeys: [],
             // 被激活的页签的名称 默认的
-            activeName: 'only'
+            activeName: 'many',
+            // 动态参数
+            manyTableData: [],
+            // 静态属性
+            onlyTableData: []
         }
     },
     created() {
@@ -73,25 +92,41 @@ export default {
 
         // 级联选择框变化会触发这个数组
         // 选中必须是三级分类
-        async handleChange() {
+        handleChange() {
+            this.getParamsData();
+        },
+
+        // Tab页签点击事件的处理函数
+        handleTabClick() {
+            console.log(this.activeName);
+            this.getParamsData();
+        },
+
+        // 获取参数的列表数据
+        // 是为了解决切换动态参数和静态属性时重新调用获取整个数据列表
+        // 在handleTabClick()=>tab页切换的时候、handleChange()=>级联选择框切换的时候 都会重新调用获取的
+        async getParamsData() {
             // 证明选中的不是三级分类
             if (this.selectedCateKeys.length !== 3) {
                 this.selectedCateKeys = []
                 return
             }
 
-            console.log(this.selectedCateKeys);
+            // console.log(this.selectedCateKeys);
+
             // 根据所选分类的id和当前所处的面板获取获取对应的参数
             const { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, { params: { sel: this.activeName } });
             if (res.meta.status !== 200) {
                 return this.$message.error('获取参数列表失败');
             }
             console.log(res.data);
-        },
 
-        // Tab页签点击事件的处理函数
-        handleTabClick() {
-            console.log(this.activeName);
+            // 现在是不知道res.data到底是哪个部分 是静态呢还是动态 就需要我们加以判断 从而挂载到那个表格当中
+            if (this.activeName === 'many') {
+                this.manyTableData = res.data;
+            } else {
+                this.onlyTableData = res.data;
+            }
         }
     },
     computed: { // 计算属性
