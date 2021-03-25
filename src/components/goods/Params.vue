@@ -26,7 +26,7 @@
                 <el-tab-pane label="动态参数" name="many">
 
                     <!-- 添加动态参数 -->
-                    <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加参数</el-button>
+                    <el-button type="primary" size="mini" :disabled="isBtnDisabled" @click="addDialogVisible=true">添加参数</el-button>
 
                     <!-- 动态参数表格 -->
                     <el-table :data="manyTableData" border stripe>
@@ -37,7 +37,7 @@
                         <el-table-column label="参数名称" prop="attr_name"></el-table-column>
                         <el-table-column label="操作">
                             <template>
-                                <el-button type="primary" icon="el-icon-edit" size="mini">编辑</el-button>
+                                <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog">编辑</el-button>
                                 <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
                             </template>
                         </el-table-column>
@@ -46,7 +46,7 @@
 
                 <el-tab-pane label="静态属性" name="only">
                     <!-- 添加静态属性 -->
-                    <el-button type="primary" size="mini" :disabled="isBtnDisabled">添加属性</el-button>
+                    <el-button type="primary" size="mini" :disabled="isBtnDisabled"  @click="addDialogVisible=true">添加属性</el-button>
 
                     <!-- 静态参数表格 -->
                     <el-table :data="onlyTableData" border stripe>
@@ -57,7 +57,7 @@
                         <el-table-column label="属性名称" prop="attr_name"></el-table-column>
                         <el-table-column label="操作">
                             <template>
-                                <el-button type="primary" icon="el-icon-edit" size="mini">编辑</el-button>
+                                <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog">编辑</el-button>
                                 <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
                             </template>
                         </el-table-column>
@@ -69,19 +69,28 @@
         <!-- 添加动态参数、静态属性的对话框 -->
         <!-- 动态参数、静态属性的对话框是同一个 -->
         <!-- title="titleText()" 这里的title不能写死了 用计算属性变成动态的 -->
-        <el-dialog :title="'添加' + titleText()" :visible.sync="addDialogVisible" width="50%">
-
-            <!-- 添加分类的表单 -->
-            <!-- <el-form :model="addCateForm" :rules="addCateFormRules" ref="addCateFormRef" label-width="100px">
-
-                <el-form-item label="分类名称：" prop="cat_name">
-                    <el-input v-model="addCateForm.cat_name"></el-input>
+        <el-dialog :title="'添加' + titleText" :visible.sync="addDialogVisible" width="50%" @close="addDialogClosed">
+            <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px">
+                <el-form-item :label="titleText" prop="attr_name">
+                    <el-input v-model="addForm.attr_name"></el-input>
                 </el-form-item>
-            </el-form> -->
-
-            <span>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
                 <el-button @click="addDialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="addCate">确 定</el-button>
+                <el-button type="primary" @click="addParams">确 定</el-button>
+            </span>
+        </el-dialog>
+
+        <!-- 修改参数对话框 -->
+        <el-dialog :title="'修改' + titleText" :visible.sync="editDialogVisible" width="50%" @close="editDialogClosed">
+            <el-form :model="editForm" :rules="editFormRules" ref="editFormRef" label-width="100px">
+                <el-form-item :label="titleText" prop="attr_name">
+                    <el-input v-model="editForm.attr_name"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="editDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="editParams">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -109,7 +118,29 @@ export default {
             // 静态属性
             onlyTableData: [],
             // 控制添加对话框的显示与隐藏
-            addDialogVisible: false
+            addDialogVisible: false,
+            // 添加参数的表单数据对象
+            addForm: {
+                attr_name: ''
+            },
+            // 添加表单的验证规则对象
+            addFormRules: {
+                attr_name: [
+                    { required: true, message: '请输入参数名称', trigger: 'blur' }
+                ]
+            },
+            // 控制编辑对话框的显示与隐藏
+            editDialogVisible: false,
+            // 修改参数的表单数据对象
+            editForm: {
+                attr_name: ''
+            },
+            // 修改表单的验证规则对象
+            editFormRules: {
+                attr_name: [
+                    { required: true, message: '请输入参数名称', trigger: 'blur' }
+                ]
+            }
         }
     },
     created() {
@@ -164,7 +195,39 @@ export default {
             } else {
                 this.onlyTableData = res.data;
             }
-        }
+        },
+
+        // 监听对话框的关闭事件
+        addDialogClosed() {
+            // 清空验证规则
+            this.$refs.addFormRef.resetFields();
+        },
+
+        // 点击按钮 参加参数
+        addParams() {
+            this.$refs.addFormRef.validate(async valid => {
+                if (!valid) return // 验证失败
+                const { data: res } = await this.$http.post(`categories/${this.cateId}/attributes`, {
+                    attr_name: this.addForm.attr_name,
+                    attr_sel: this.activeName
+                })
+                if (res.meta.status !== 201) return this.$message.error('添加失败')
+                this.$message.success('添加成功');
+                this.addDialogVisible = false;
+                this.getParamsData();
+            })
+        },
+
+        // 点击按钮展示修改对话框
+        showEditDialog() {
+            this.editDialogVisible = true;
+        },
+        // 重置修改的表单
+        editDialogClosed() {
+            this.$refs.editFormRef.resetFields();
+        },
+        // 点击按钮 修改参数
+        editParams() {}
     },
     computed: { // 计算属性
 
