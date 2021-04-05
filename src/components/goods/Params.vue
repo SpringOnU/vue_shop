@@ -31,14 +31,18 @@
                     <!-- 动态参数表格 -->
                     <el-table :data="manyTableData" border stripe>
                         <!-- 展开行 -->
-                        <el-table-column type="expand"></el-table-column>
+                        <el-table-column type="expand">
+                            <template slot-scope="scope">
+                                <el-tag v-for="(item, i) in scope.row.attr_vals" :key="i" closable>{{item}}</el-tag>
+                            </template>
+                        </el-table-column>
                         <!-- 索引列 -->
                         <el-table-column type="index"></el-table-column>
                         <el-table-column label="参数名称" prop="attr_name"></el-table-column>
                         <el-table-column label="操作">
                             <template  slot-scope="scope">
                                 <el-button size="mini" type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row.attr_id)">编辑</el-button>
-                                <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
+                                <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteDialog(scope.row.attr_id)">删除</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -56,9 +60,9 @@
                         <el-table-column type="index"></el-table-column>
                         <el-table-column label="属性名称" prop="attr_name"></el-table-column>
                         <el-table-column label="操作">
-                            <template>
-                                <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog()">编辑</el-button>
-                                <el-button type="danger" icon="el-icon-delete" size="mini">删除</el-button>
+                            <template slot-scope="scope">
+                                <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.attr_id)">编辑</el-button>
+                                <el-button type="danger" icon="el-icon-delete" size="mini" @click="deleteDialog(scope.row.attr_id)">删除</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -187,6 +191,11 @@ export default {
             if (res.meta.status !== 200) {
                 return this.$message.error('获取参数列表失败');
             }
+
+            res.data.forEach(item => {
+                item.attr_vals = item.attr_vals.split(' ')
+                // 原本为一个字符串 现在用空格把它分开了 成为了一个数组
+            })
             console.log(res.data);
 
             // 现在是不知道res.data到底是哪个部分 是静态呢还是动态 就需要我们加以判断 从而挂载到那个表格当中
@@ -235,12 +244,49 @@ export default {
       this.editForm = res.data
       this.editDialogVisible = true
     },
+
         // 重置修改的表单
         editDialogClosed() {
             this.$refs.editFormRef.resetFields();
         },
         // 点击按钮 修改参数
-        editParams() {}
+        editParams() {
+            this.$refs.editFormRef.validate(async valid => {
+                if (!valid) return
+                const { data: res } = await this.$http.put(`categories/${this.cateId}/attributes/${this.editForm.attr_id}`,
+                {
+                    attr_name: this.editForm.attr_name,
+                    attr_sel: this.activeName
+                })
+
+                if (res.meta.status !== 200) {
+                return this.$message.error('修改失败');
+            }
+                this.$message.success('修改成功');
+                this.getParamsData();
+                this.editDialogVisible = false;
+            })
+        },
+        // 删除参数
+        async deleteDialog(id) {
+            const confirmResult = await this.$confirm('此操作将永久删除该参数, 是否继续?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).catch(err => err) // 捕获错误消息
+
+            if (confirmResult !== 'confirm') {
+                return this.$message.info('已取消删除')
+            }
+            const { data: res } = await this.$http.delete(`categories/${this.cateId}/attributes/${id}`)
+
+            if (res.meta.status !== 200) {
+                return this.$message.error('删除参数失败！')
+            }
+
+                this.$message.success('删除成功');
+                this.getParamsData();
+        }
     },
     computed: { // 计算属性
 
@@ -274,5 +320,8 @@ export default {
 <style lang="less" scoped>
 .cat_opt {
     margin: 15px 0;
+}
+.el-tag {
+    margin: 10px;
 }
 </style>

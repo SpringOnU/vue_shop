@@ -10,7 +10,7 @@ import TreeTable from 'vue-table-with-tree-grid'
 axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/' // 配置请求根路径 每次都和s较劲。。
 // 添加请求拦截器=>预处理过程：通过axios请求拦截器添加token，保证拥有获取数据的权限
 axios.interceptors.request.use(config => {
-  console.log(config)
+  // console.log(config)
   config.headers.Authorization = window.sessionStorage.getItem('token')
   return config
   // 在最后必须return config

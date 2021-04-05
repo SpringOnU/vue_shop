@@ -188,7 +188,7 @@ export default {
             // 递归获取三级权限的id
             this.getLeafKeys(role, this.defKeys);
             this.setRightDialogVisible = true;
-            console.log(this.rightslist);
+            // console.log(this.rightslist);
         },
         // 通过递归的形式 获取所有角色下的三级权限的id并保存到数组中
         getLeafKeys(node, arr) {
