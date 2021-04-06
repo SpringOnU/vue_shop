@@ -33,7 +33,13 @@
                         <!-- 展开行 -->
                         <el-table-column type="expand">
                             <template slot-scope="scope">
+                                <!-- 循环渲染tag标签 -->
                                 <el-tag v-for="(item, i) in scope.row.attr_vals" :key="i" closable>{{item}}</el-tag>
+                                <!-- 输入的文本框 -->
+                                <el-input class="input-new-tag" v-if="scope.row.inputVisible" v-model="scope.row.inputValue" ref="saveTagInput" size="small" @keyup.enter.native="handleInputConfirm(scope.row)" @blur="handleInputConfirm(scope.row)">
+                                    <!-- @keyup.enter.native 失去了焦点或者是点击了回车 都会触发这个的函数 -->
+                                </el-input>
+                                <el-button v-else class="button-new-tag" size="small" @click="showInput(scope.row)">+ New Tag</el-button>
                             </template>
                         </el-table-column>
                         <!-- 索引列 -->
@@ -193,8 +199,16 @@ export default {
             }
 
             res.data.forEach(item => {
-                item.attr_vals = item.attr_vals.split(' ')
+                item.attr_vals = item.attr_vals ? item.attr_vals.split(' ') : [];
                 // 原本为一个字符串 现在用空格把它分开了 成为了一个数组
+                // 用三元表达式 如果为空 就返回一个false 空白的数组
+
+                // 添加tag会出现上下联动现象 => 原因存在于`inputVisible` `inputValue`相同 就在顺序循环中控制他文本框的显示和隐藏
+
+                // 添加tag标签 可以用来控制添加tag标签的文本框展示与否
+                item.inputVisible = false;
+                // 文本框中输入的内容
+                item.inputValue = '';
             })
             console.log(res.data);
 
@@ -229,26 +243,27 @@ export default {
 
         // 点击按钮展示修改对话框
         async showEditDialog(attrId) {
-      // 查询当前参数的信息
-      const { data: res } = await this.$http.get(
-        `categories/${this.cateId}/attributes/${attrId}`,
-        {
-          params: { attr_sel: this.activeName }
-        }
-      )
+            // 查询当前参数的信息
+            const { data: res } = await this.$http.get(
+                `categories/${this.cateId}/attributes/${attrId}`,
+                {
+                params: { attr_sel: this.activeName }
+                }
+            )
 
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取参数信息失败！')
-      }
+            if (res.meta.status !== 200) {
+                return this.$message.error('获取参数信息失败！')
+            }
 
-      this.editForm = res.data
-      this.editDialogVisible = true
-    },
+            this.editForm = res.data
+            this.editDialogVisible = true
+        },
 
         // 重置修改的表单
         editDialogClosed() {
             this.$refs.editFormRef.resetFields();
         },
+
         // 点击按钮 修改参数
         editParams() {
             this.$refs.editFormRef.validate(async valid => {
@@ -267,6 +282,7 @@ export default {
                 this.editDialogVisible = false;
             })
         },
+
         // 删除参数
         async deleteDialog(id) {
             const confirmResult = await this.$confirm('此操作将永久删除该参数, 是否继续?', '提示', {
@@ -286,6 +302,46 @@ export default {
 
                 this.$message.success('删除成功');
                 this.getParamsData();
+        },
+
+        // 添加tag小标签 失去了焦点或者是点击了回车 都会触发
+        async handleInputConfirm(row) {
+            if (row.inputValue.trim().length === 0) {
+                // trim()方法会去掉字符串两端的空格
+                row.inputValue = ''
+                // 失去焦点 不展示文本框
+                row.inputVisible = false
+                return
+            }
+            // 如果没有return 证明输入了内容 需要做后续处理
+            row.attr_vals.push(row.inputValue.trim())
+            row.inputValue = ''
+            row.inputVisible = false
+
+            // 发起请求 保存这次操作 传输到后台数据中去
+            const { data: res } = await this.$http.put(`categories/${this.cateId}/attributes/${row.attr_id}`,
+            {
+                attr_name: row.attr_name,
+                attr_sel: row.attr_sel,
+                attr_vals: row.attr_vals.join(' ') // 用空格进行字符串拼接
+            })
+
+            if (res.meta.status !== 200) {
+                return this.$message.error('修改参数失败！')
+            }
+
+            this.$message.success('修改参数成功');
+        },
+
+        // 添加tag小标签 点击添加按钮 都会触发
+        showInput(row) {
+            row.inputVisible = true;
+
+            // 让文本框自动获得焦点
+            // $nextTick 作用 => 当页面上元素被重新渲染之后 才会指定回调函数中的代码
+            this.$nextTick(_ => {
+                this.$refs.saveTagInput.$refs.input.focus();
+            });
         }
     },
     computed: { // 计算属性
@@ -323,5 +379,8 @@ export default {
 }
 .el-tag {
     margin: 10px;
+}
+.el-input {
+    width: 120px;
 }
 </style>
