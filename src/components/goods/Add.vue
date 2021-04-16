@@ -22,8 +22,9 @@
                 </el-steps>
 
                 <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px" label-position="top">
+
                 <!-- tab栏区域 -->
-                    <el-tabs :tab-position="'left'" v-model="activeIndex" :before-leave="beforeTabLeave">
+                    <el-tabs :tab-position="'left'" v-model="activeIndex" :before-leave="beforeTabLeave" @tab-click="tabClicked">
                         <el-tab-pane label="基本信息" name="0">
                             <el-form-item label="商品名称" prop="goods_name">
                                 <el-input v-model="addForm.goods_name"></el-input>
@@ -47,9 +48,31 @@
                                 </el-cascader>
                             </el-form-item>
                         </el-tab-pane>
-                        <el-tab-pane label="商品参数" name="1">商品参数</el-tab-pane>
-                        <el-tab-pane label="商品属性" name="2">商品属性</el-tab-pane>
-                        <el-tab-pane label="商品图片" name="3">商品图片</el-tab-pane>
+
+                        <el-tab-pane label="商品参数" name="1">
+                            <!-- 渲染表单item项 -->
+                            <el-form-item :label="item.attr_name" v-for="item in manyTabData" :key="item.attr_id">
+                                  <el-checkbox-group v-model="item.attr_vals">
+                                    <el-checkbox :label="cb" v-for="(cb, i) in item.attr_vals" :key="i.attr_id" border>
+                                        <!-- cb名称；i索引 -->
+                                    </el-checkbox>
+                                </el-checkbox-group>
+                            </el-form-item>
+                        </el-tab-pane>
+
+                        <el-tab-pane label="商品属性" name="2">
+                            <el-form-item :label="item.attr_name" v-for="item in onlyTabData" :key="item.attr_id">
+                                <el-input v-model="item.attr_vals" disabled></el-input>
+                            </el-form-item>
+                        </el-tab-pane>
+                        <el-tab-pane label="商品图片" name="3">
+                            <el-upload action="uploadURL" :on-preview="handlePreview" :on-remove="handleRemove" list-type="picture">
+                                <!-- action上传图片时选择的后台api接口 应填写完整的api地址 在main.js中寻找根路径 再在后面加上api文档中的请求路径
+                                     -->
+                            <el-button size="small" type="primary">点击上传</el-button>
+                            </el-upload>
+                        </el-tab-pane>
+
                         <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
                     </el-tabs>
                 </el-form>
@@ -95,7 +118,13 @@ export default {
                 label: 'cat_name', /* 看到的 */
                 value: 'cat_id', /* 选中的 */
                 children: 'children' /* 父子节点的嵌套 */
-            }
+            },
+            // 商品参数 动态参数列表
+            manyTabData: [],
+            // 商品参数 静态参数列表
+            onlyTabData: [],
+            // 上传图片的url地址
+            uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
         }
     },
     created() {
@@ -110,18 +139,18 @@ export default {
             }
 
             this.catelist = res.data
-            console.log(this.catelist);
+            // console.log(this.catelist);
         },
 
         handleChange() {
-            console.log(this.addForm.goods_cat)
+            // console.log(this.addForm.goods_cat)
             if (this.addForm.goods_cat.length !== 3) {
                     this.addForm.goods_cat = []
             }
         },
 
         beforeTabLeave(activeName, oldActiveName) {
-            console.log(activeName, oldActiveName);
+            // console.log(activeName, oldActiveName);
             /* 即将进入的标签页名称activeName,
             即将离开的标签页名称oldActiveName */
             /* return false 阻止标签页的切换 */
@@ -130,11 +159,64 @@ export default {
                 this.$message.error('请先选择商品分类');
                 return false
             }
+        },
+
+        async tabClicked() {
+            console.log(this.activeIndex);
+
+            // 访问商品参数面板
+            if (this.activeIndex === '1') {
+                const { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, {
+                    params: {
+                        sel: 'many'
+                    }
+                })
+                if (res.meta.status !== 200) {
+                return this.$message.error('获取动态参数列表失败');
+                }
+                res.data.forEach(item => {
+                    item.attr_vals = item.attr_vals.length === 0 ? [] : item.attr_vals.split(' ')
+                })
+                this.manyTabData = res.data
+                console.log(this.manyTabData);
+            }
+
+            // 访问静态属性面板
+            if (this.activeIndex === '2') {
+                const { data: res } = await this.$http.get(`categories/${this.cateId}/attributes`, {
+                    params: {
+                        sel: 'only'
+                    }
+                })
+
+                if (res.meta.status !== 200) {
+                return this.$message.error('获取静态参数列表失败');
+                }
+                res.data.forEach(item => {
+                    item.attr_vals = item.attr_vals.length === 0 ? [] : item.attr_vals.split(' ')
+                })
+                this.onlyTabData = res.data
+                console.log(this.onlyTabData);
+            }
+        },
+        // 处理图片预览效果
+        handlePreview() {},
+        // 处理移除图片的效果
+        handleRemove() {}
+    },
+    computed: {
+        cateId() {
+            if (this.addForm.goods_cat.length === 3) {
+                return this.addForm.goods_cat[2]
+            }
+            return null
         }
     }
 }
 </script>
 
 <style lang="less" scoped>
-
+    .el-checkbox {
+        margin: 0 10px 0 0 !important; // 提升指定样式规则的应用优先权 让浏览器首选执行这个语句
+    }
 </style>
