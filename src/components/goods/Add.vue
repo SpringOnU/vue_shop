@@ -66,8 +66,9 @@
                             </el-form-item>
                         </el-tab-pane>
                         <el-tab-pane label="商品图片" name="3">
-                            <el-upload action="uploadURL" :on-preview="handlePreview" :on-remove="handleRemove" list-type="picture">
+                            <el-upload :action="uploadURL" :on-preview="handlePreview" :on-remove="handleRemove" list-type="picture" :headers="headerObj" :on-success="handleSuccess">
                                 <!-- action上传图片时选择的后台api接口 应填写完整的api地址 在main.js中寻找根路径 再在后面加上api文档中的请求路径
+                                :headers="headerObj" 图片上传界面的headers请求头对象 相当于权限的token
                                      -->
                             <el-button size="small" type="primary">点击上传</el-button>
                             </el-upload>
@@ -90,7 +91,8 @@ export default {
                 goods_price: 0,
                 goods_weight: 0,
                 goods_number: 0,
-                goods_cat: 0/* 商品所属的分类数组 */
+                goods_cat: 0,/* 商品所属的分类数组 */
+                pics: []
             },
             addFormRules: {
                 goods_name: [
@@ -125,6 +127,10 @@ export default {
             onlyTabData: [],
             // 上传图片的url地址
             uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
+            // 图片上传界面的headers请求头对象
+            headerObj: {
+                Authorization: window.sessionStorage.getItem('token')
+            }
         }
     },
     created() {
@@ -202,7 +208,27 @@ export default {
         // 处理图片预览效果
         handlePreview() {},
         // 处理移除图片的效果
-        handleRemove() {}
+        handleRemove() {},
+        // 监听图片上传成功的条件
+        handleSuccess(response) {
+            console.log(response);
+            // 1. 拼接得到一个图片信息对象
+            const picInfo = { pic: response.data.tmp_path }
+            // 2. 将图片信息对象push到pics数组中
+            this.addForm.pics.push(picInfo)
+            console.log(this.addForm)
+        },
+        handleRemove(file) {
+            // console.log(file)
+            // 1. 获取将要删除的图片的临时路径
+            const filePath = file.response.data.tmp_path
+            // 2. 从 pics 数组中，找到这个图片对应的索引值 x的pic属性正好等于filePath
+            const i = this.addForm.pics.findIndex(x => x.pic === filePath)
+            // 3. 调用数组的 splice 方法，把图片信息对象，从 pics 数组中移除
+            this.addForm.pics.splice(i, 1)
+            console.log(this.addForm)
+        },
+        handlePreview() {}
     },
     computed: {
         cateId() {
