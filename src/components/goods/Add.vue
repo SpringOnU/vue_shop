@@ -74,10 +74,21 @@
                             </el-upload>
                         </el-tab-pane>
 
-                        <el-tab-pane label="商品内容" name="4">商品内容</el-tab-pane>
+                        <el-tab-pane label="商品内容" name="4">
+                            <!-- 富文本编辑器组件 -->
+                              <quill-editor v-model="addForm.goods_introduce"/>
+                              <!-- 添加商品 -->
+                              <el-button type="primary" class="btnAdd"  @click="add">添加商品</el-button>
+                        </el-tab-pane>
                     </el-tabs>
                 </el-form>
         </el-card>
+
+        <!-- 图片预览 -->
+        <el-dialog title="图片预览" :visible.sync="previewVisible" width="50%">
+            <img :src="previewPath" alt="" class="previewImg">
+        </el-dialog>
+
     </div>
 </template>
 
@@ -91,8 +102,9 @@ export default {
                 goods_price: 0,
                 goods_weight: 0,
                 goods_number: 0,
-                goods_cat: 0,/* 商品所属的分类数组 */
-                pics: []
+                goods_cat: 0, /* 商品所属的分类数组 */
+                pics: [],
+                goods_introduce: ''
             },
             addFormRules: {
                 goods_name: [
@@ -130,7 +142,9 @@ export default {
             // 图片上传界面的headers请求头对象
             headerObj: {
                 Authorization: window.sessionStorage.getItem('token')
-            }
+            },
+            previewPath: '',
+            previewVisible: false
         }
     },
     created() {
@@ -205,10 +219,6 @@ export default {
                 console.log(this.onlyTabData);
             }
         },
-        // 处理图片预览效果
-        handlePreview() {},
-        // 处理移除图片的效果
-        handleRemove() {},
         // 监听图片上传成功的条件
         handleSuccess(response) {
             console.log(response);
@@ -218,8 +228,9 @@ export default {
             this.addForm.pics.push(picInfo)
             console.log(this.addForm)
         },
+        // 处理移除图片的效果
         handleRemove(file) {
-            // console.log(file)
+            console.log(file)
             // 1. 获取将要删除的图片的临时路径
             const filePath = file.response.data.tmp_path
             // 2. 从 pics 数组中，找到这个图片对应的索引值 x的pic属性正好等于filePath
@@ -228,7 +239,20 @@ export default {
             this.addForm.pics.splice(i, 1)
             console.log(this.addForm)
         },
-        handlePreview() {}
+        // 处理图片预览效果
+        handlePreview(file) {
+            console.log(file);
+            this.previewPath = file.response.data.url
+            this.previewVisible = true
+        },
+        // 添加商品
+        add() {
+            this.$refs.addFormRef.validate(valid => {
+                if (!valid) {
+                    return this.$message.error('请添加必要表单项');
+                }
+        })
+        }
     },
     computed: {
         cateId() {
@@ -244,5 +268,8 @@ export default {
 <style lang="less" scoped>
     .el-checkbox {
         margin: 0 10px 0 0 !important; // 提升指定样式规则的应用优先权 让浏览器首选执行这个语句
+    }
+    .previewImg {
+        width: 100%;
     }
 </style>
