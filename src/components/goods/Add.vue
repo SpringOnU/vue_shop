@@ -93,6 +93,8 @@
 </template>
 
 <script>
+import _ from 'lodash'
+
 export default {
     data() {
         return {
@@ -104,7 +106,8 @@ export default {
                 goods_number: 0,
                 goods_cat: 0, /* 商品所属的分类数组 */
                 pics: [],
-                goods_introduce: ''
+                goods_introduce: '',
+                attrs: []
             },
             addFormRules: {
                 goods_name: [
@@ -247,10 +250,43 @@ export default {
         },
         // 添加商品
         add() {
-            this.$refs.addFormRef.validate(valid => {
+            this.$refs.addFormRef.validate(async valid => {
                 if (!valid) {
                     return this.$message.error('请添加必要表单项');
                 }
+
+                // 执行添加的业务逻辑
+                // lodash cloneDeep(obj)
+                const form = _.cloneDeep(this.addForm)
+                form.goods_cat = form.goods_cat.join(',')
+                // 处理动态参数
+                this.manyTabData.forEach(item => {
+                    const newInfo = {
+                        attr_id: item.attr_id,
+                        attr_value: item.attr_vals.join(' ')
+                    }
+                    this.addForm.attrs.push(newInfo)
+                })
+                // 处理静态属性
+                this.onlyTabData.forEach(item => {
+                    const newInfo = {
+                        attr_id: item.attr_id,
+                        attr_value: item.attr_vals
+                    }
+                    this.addForm.attrs.push(newInfo)
+                })
+                form.attrs = this.addForm.attrs
+                console.log(form)
+                // this.addForm.goods_cat = this.addForm.goods_cat.join(',') this.addForm和级联选择器的el-cascader双向绑定，级联选择器中要求的是以数组形式，而添加商品要求的是字符串，所赐矛盾冲突了。解决方法：深拷贝。
+
+                // 发起请求 添加商品
+                // 商品名称必须唯一
+                const { data: res } = await this.$http.post('goods', form)
+                if (res.meta.status !== 201) {
+                return this.$message.error('添加商品失败');
+                }
+                this.$message.success('添加商品失败')
+                this.$router.push('/goods')
         })
         }
     },
