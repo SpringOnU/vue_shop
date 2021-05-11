@@ -12,6 +12,7 @@ import GoodsList from '../components/goods/List.vue'
 import Add from '../components/goods/Add.vue'
 
 Vue.use(Router)
+
 const router = new Router({
   routes: [
     { path: '/', redirect: '/login' },
