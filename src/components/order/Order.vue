@@ -36,7 +36,7 @@
                 <el-table-column label="操作" prop="goods_name">
                     <template>
                         <el-button size="mini" type="primary" icon="el-icon-edit" @click="showBox"></el-button>
-                        <el-button size="mini" type="success" icon="el-icon-location"></el-button>
+                        <el-button size="mini" type="success" icon="el-icon-location" @click="showProgressBox"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -60,6 +60,14 @@
         <el-button type="primary" @click="addressVisible = false">确 定</el-button>
       </span>
     </el-dialog>
+
+<!--     <el-dialog title="物流进度" :visible.sync="progressVisible" width="30%">
+          <el-timeline>
+            <el-timeline-item v-for="(activity, index) in progressInfo" :key="index" :timestamp="activity.time">
+                {{activity.content}}
+            </el-timeline-item>
+        </el-timeline>
+    </el-dialog> -->
     </div>
 </template>
 
@@ -89,7 +97,9 @@ export default {
                     { required: true, message: '请填写详细地址', trigger: 'blur' }
                 ]
             },
-            cityData
+            cityData,
+            progressVisible: false,
+            progressInfo: []
         }
     },
     created() {
@@ -97,8 +107,8 @@ export default {
     },
     methods: {
         async getOrderList() {
-            const { data: res } = await this.$http.get('orders',{params: this.queryInfo})
-            if( res.meta.status != 200 ) {
+            const { data: res } = await this.$http.get('orders', { params: this.queryInfo })
+            if (res.meta.status !== 200) {
                 return this.$message.error('获取订单列表数据失败');
             }
             this.$message.success('获取订单列表数据成功');
@@ -126,12 +136,27 @@ export default {
 
         addressDialogClosed() {
         this.$refs.addressFormRef.resetFields()
+        },
+
+        async showProgressBox() {
+            this.progressVisible = true;
+
+            const { data: res } = await this.$http.get('/kuaidi/804909574412544580')
+
+            if (res.meta.status !== 200) {
+                return this.$message.error('获取物流数据失败');
+            }
+
+            this.progressInfo = res.data;
+            console.log(this.progressInfo);
         }
     }
 }
 </script>
 
 <style scoped>
+/* @import '../../plugins/timeline/timeline.css';
+@import '../../plugins/timeline-item/timeline-item.css'; */
 .el-cascader{
     width: 100%;
 }
